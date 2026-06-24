@@ -58,6 +58,11 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    isLoggedIn: {
+      type: Boolean,
+      default: false,
+    },
+
     isActive: {
       type: Boolean,
       default: false,

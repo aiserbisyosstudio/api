@@ -27,7 +27,7 @@ export const loginUser = async ({ emailMobile, password }) => {
   }
 
   await User.findByIdAndUpdate(user._id, {
-    is_logged_in: true,
+    isLoggedIn: true,
   });
 
   const loggedInUser = await User.findById(user._id).select(

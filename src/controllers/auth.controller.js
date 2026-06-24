@@ -1,4 +1,5 @@
 import { loginUser } from "../services/auth.service.js";
+import User from "../models/user.model.js";
 
 export const login = async (req, res) => {
   try {
@@ -34,6 +35,12 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
+    const { userId } = req.body;
+
+    await User.findByIdAndUpdate(userId, {
+      isLoggedIn: true,
+    });
+
     res.clearCookie("token");
 
     res.status(200).json({
