@@ -1,33 +1,25 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
 
 const app = express();
 
 app.use(helmet());
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 
-const allowedOrigins = [
-  'https://www.aiserbisyosstudio.com',
-  'https://aiserbisyosstudio.com',
-  'http://localhost:5173',
-];
-const corsOptions = {
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('Blocked:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
+app.use(
+  cors({
+    origin: [
+      "https://www.aiserbisyosstudio.com",
+      "https://aiserbisyosstudio.com",
+      "http://localhost:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+  }),
+);
 
-app.use(cors(corsOptions));
 app.use(express.json());
 
 import userRouter from "./routes/user.route.js";
@@ -38,20 +30,20 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/contact", contactRouter);
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: 'Welcome to AI Serbisyos Studio api service...',
+    message: "Welcome to AI Serbisyos Studio api service...",
   });
 });
 
-app.get('/error', (req, res) => {
+app.get("/error", (req, res) => {
   try {
-    throw new Error('Sample Error');
+    throw new Error("Sample Error");
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
+      message: "Internal Server Error",
     });
   }
 });
