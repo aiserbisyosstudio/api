@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { requestLogger } from './middlewares/requestLogger.js';
 
 const app = express();
 
@@ -30,7 +29,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(requestLogger);
 
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
