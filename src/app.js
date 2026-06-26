@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import logger from './config/logger.js';
 import { requestLogger } from './middlewares/requestLogger.js';
 
 const app = express();
@@ -42,7 +41,6 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/contact", contactRouter);
 
 app.get('/', (req, res) => {
-  logger.info('Home route accessed');
   res.json({
     success: true,
     message: 'Welcome to AI Serbisyos Studio api service...',
@@ -53,7 +51,6 @@ app.get('/error', (req, res) => {
   try {
     throw new Error('Sample Error');
   } catch (error) {
-    logger.error(error);
     res.status(500).json({
       success: false,
       message: 'Internal Server Error',

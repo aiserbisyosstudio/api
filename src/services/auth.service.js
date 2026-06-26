@@ -4,11 +4,9 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/jwt.util.js";
-import logger from "../config/logger.js";
 
 export const loginUser = async ({ emailMobile, password }) => {
   if ([emailMobile, password].some((field) => field?.trim() === "")) {
-    logger.error("Login user: All fields are required");
     throw new Error("All fields are required");
   }
 
@@ -16,13 +14,11 @@ export const loginUser = async ({ emailMobile, password }) => {
     $or: [{ mobile: emailMobile }, { email: emailMobile }],
   });
   if (!user) {
-    logger.error(`Login user: User not found ${emailMobile}`);
     throw new Error("User not found");
   }
 
   const isMatch = await user.isPasswordCorrect(password);
   if (!isMatch) {
-    logger.error("Login user: Invalid credentials");
     throw new Error("Invalid credentials");
   }
 
@@ -36,6 +32,5 @@ export const loginUser = async ({ emailMobile, password }) => {
 
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
-  logger.info("Login user: User loggedin successfully");
   return { user: loggedInUser, accessToken, refreshToken };
 };
