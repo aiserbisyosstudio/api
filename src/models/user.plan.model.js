@@ -34,11 +34,13 @@ const userPlanSchema = new mongoose.Schema(
     startsAt: {
       type: Date,
       required: true,
+      default: Date.now
     },
 
     expiresAt: {
       type: Date,
       required: true,
+      default: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   },
   {

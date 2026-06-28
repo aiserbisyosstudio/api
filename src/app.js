@@ -25,10 +25,12 @@ app.use(express.json());
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
 import contactRouter from "./routes/contact.route.js";
+import planRouter from "./routes/plan.route.js"
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/contact", contactRouter);
+app.use("/api/v1/plan", planRouter);
 
 app.get("/", (req, res) => {
   res.json({

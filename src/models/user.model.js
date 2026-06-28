@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
@@ -26,12 +26,19 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ['admin', 'user'],
-      default: 'user',
+      enum: ["admin", "user"],
+      default: "user",
     },
 
     language: {
-      type: String
+      code: {
+        type: String,
+        default: "en",
+      },
+      label: {
+        type: String,
+        default: "English",
+      },
     },
 
     password: {
@@ -41,13 +48,13 @@ const userSchema = new mongoose.Schema(
 
     avatar: {
       type: String,
-      default: '',
+      default: "",
     },
 
     authProvider: {
       type: String,
-      enum: ['local', 'google'],
-      default: 'local',
+      enum: ["local", "google"],
+      default: "local",
     },
 
     providerId: String,
@@ -80,8 +87,8 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return null;
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return null;
   this.password = await bcrypt.hash(this.password, 10);
 });
 
@@ -89,4 +96,4 @@ userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-export default mongoose.model('User', userSchema);
+export default mongoose.model("User", userSchema);

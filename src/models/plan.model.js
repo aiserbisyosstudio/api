@@ -31,6 +31,11 @@ const planSchema = new mongoose.Schema(
       required: true,
     },
 
+    allowed: {
+      type: String,
+      required: true,
+    },
+
     oneImageCredit: Number,
 
     oneVideoCredit: Number,
