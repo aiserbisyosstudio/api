@@ -25,7 +25,6 @@ export const updateUserLanguage = async (req, res) => {
 export const updatePlan = async (req, res) => {
   try {
     const userPlan = await updateUserPlan(req.body);
-    console.log(userPlan);
     res.status(201).json({ userPlan, success: true, message: 'Plan activate successfully' });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
