@@ -5,7 +5,7 @@ export const login = async (req, res) => {
   try {
     const result = await loginUser(req.body);
 
-    const { user, accessToken, refreshToken } = result;
+    const { user, accessToken, refreshToken, userPlan } = result;
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -24,6 +24,7 @@ export const login = async (req, res) => {
       success: true,
       message: "Login successful",
       user: user,
+      userPlan: userPlan
     });
   } catch (err) {
     res.status(400).json({

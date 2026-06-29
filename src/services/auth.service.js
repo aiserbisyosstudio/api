@@ -32,11 +32,11 @@ export const loginUser = async ({ emailMobile, password }) => {
     "_id name email mobile role is_active credits profile_url",
   ).lean();
 
-  const plan = await UserPlan.findOne({ userId: loggedInUser._id }).select("availableCredits").populate("planId", "name");
-  loggedInUser.availableCredits = plan?.availableCredits ?? 0;
-  loggedInUser.memberShipStatus = plan?.planId?.name ?? "new";
+  const plan = await UserPlan.findOne({ userId: loggedInUser._id }).populate("planId", "code");
+  loggedInUser.availableCredits = plan?.remainingCredits ?? 0;
+  loggedInUser.memberShipStatus = plan?.planId?.code ?? "new";
 
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
-  return { user: loggedInUser, accessToken, refreshToken };
+  return { user: loggedInUser, userPlan: plan, accessToken, refreshToken };
 };
