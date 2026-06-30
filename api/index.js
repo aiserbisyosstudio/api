@@ -3,7 +3,6 @@ import connectDB from "../src/config/database.js";
 import { connectRedis } from "../src/config/redis.js";
 
 let isConnected = false;
-let isRedisConnected = false;
 
 const handler = async (req, res) => {
   try {
@@ -12,9 +11,7 @@ const handler = async (req, res) => {
       isConnected = true;
     }
 
-    if( !isRedisConnected ) {
-      await connectRedis();
-    }
+    await connectRedis();
 
     return app(req, res);
   } catch (error) {
