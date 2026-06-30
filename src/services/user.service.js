@@ -5,7 +5,6 @@ import UserUsage from "../models/user.usage.model.js";
 import UserLog from "../models/user.log.model.js";
 import bcrypt from "bcryptjs";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
-import { redisClient } from "../config/redis.js";
 
 const PROFILE_CACHE_TTL = 60 * 5; // 5 minutes
 
@@ -71,13 +70,6 @@ export const updateUserPlan = async ({ userId, code }) => {
 };
 
 export const getUserProfile = async ({ userId }) => {
-  const cacheKey = `user:profile:${userId}`;
-
-  const cachedProfile = await redisClient.get(cacheKey);
-  if (cachedProfile) {
-    return JSON.parse(cachedProfile);
-  }
-
   const defaultUserPlan = {
     purchasedCredits: 0,
     remainingCredits: 0,
@@ -120,10 +112,6 @@ export const getUserProfile = async ({ userId }) => {
     },
     usage: usage ?? defaultUsage,
   };
-
-  // Store in Redis
-  await redisClient.setEx(cacheKey, PROFILE_CACHE_TTL, JSON.stringify(profile));
-
   return profile;
 };
 
