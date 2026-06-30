@@ -1,6 +1,6 @@
 import app from "../src/app.js";
 import connectDB from "../src/config/database.js";
-import { connectRedis } from "./config/redis.js";
+import { connectRedis } from "../src/config/redis.js";
 
 let isConnected = false;
 let isRedisConnected = false;
