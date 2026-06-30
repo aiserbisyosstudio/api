@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
-import UserPlan from '../models/user.plan.model.js';
+import UserPlan from "../models/user.plan.model.js";
+import UserUsage from "../models/user.usage.model.js";
+import UserLog from "../models/user.log.model.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -28,15 +30,101 @@ export const loginUser = async ({ emailMobile, password }) => {
     lastLoginAt: new Date(),
   });
 
-  const loggedInUser = await User.findById(user._id).select(
-    "_id name email mobile role is_active credits profile_url",
-  ).lean();
+  const loggedInUser = await User.findById(user._id)
+    .select(
+      "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
+    )
+    .lean();
 
-  const plan = await UserPlan.findOne({ userId: loggedInUser._id }).populate("planId", "code");
+  const defaultUserPlan = {
+    purchasedCredits: 0,
+    remainingCredits: 0,
+    status: null,
+    expiresAt: null,
+    createdAt: null,
+    planId: {
+      code: "new",
+    },
+  };
+
+  const defaultUsage = {
+    imagesGenerated: 0,
+    videosGenerated: 0,
+    creditsConsumed: 0,
+  };
+
+  const plan = await UserPlan.findOne({ userId: loggedInUser._id })
+    .populate("planId", "code")
+    .lean();
+  const usage = await UserUsage.findOne({ userId: loggedInUser._id })
+    .select("imagesGenerated videosGenerated creditsConsumed")
+    .lean();
+
   loggedInUser.availableCredits = plan?.remainingCredits ?? 0;
   loggedInUser.memberShipStatus = plan?.planId?.code ?? "new";
 
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
-  return { user: loggedInUser, userPlan: plan, accessToken, refreshToken };
+  return {
+    user: loggedInUser,
+    plan: { ...defaultUserPlan, ...plan },
+    usage: usage ?? defaultUsage,
+    accessToken,
+    refreshToken,
+  };
+};
+
+export const updateUserPassword = async (req) => {
+  const { userId, currentPassword, newPassword } = req.body;
+  if (
+    [userId, currentPassword, newPassword].some((field) => field?.trim() === "")
+  ) {
+    throw new Error("All fields are required");
+  }
+
+  if (currentPassword === newPassword) {
+    throw new Error("New password must be different from current password");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const isPasswordCorrect = await user.isPasswordCorrect(currentPassword);
+  if (!isPasswordCorrect) {
+    throw new Error("Current password is is not correct");
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  await UserLog.create({
+    userId,
+    action: "PASSWORD_CHANGED",
+    changes: [
+      {
+        field: "password",
+        oldValue: "",
+        newValue: "",
+      },
+    ],
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+    performedBy: userId,
+  });
+};
+
+export const verifyEmailOtp = async ({ userId }) => {
+  await User.findByIdAndUpdate(userId, {
+    isEmailVerified: true,
+  });
+
+  const user = await User.findById(userId)
+    .select(
+      "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
+    )
+    .lean();
+
+  return user;
 };

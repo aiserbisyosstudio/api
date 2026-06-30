@@ -5,6 +5,9 @@ import UserUsage from "../models/user.usage.model.js";
 import UserLog from "../models/user.log.model.js";
 import bcrypt from "bcryptjs";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
+import { redisClient } from "../config/redis.js";
+
+const PROFILE_CACHE_TTL = 60 * 5; // 5 minutes
 
 export const registerUser = async ({ name, email, mobile, password }) => {
   if ([name, email, mobile, password].some((field) => field?.trim() === "")) {
@@ -68,9 +71,12 @@ export const updateUserPlan = async ({ userId, code }) => {
 };
 
 export const getUserProfile = async ({ userId }) => {
-  const user = await User.findById(userId)
-    .select("_id name email mobile credits profile_url")
-    .lean();
+  const cacheKey = `user:profile:${userId}`;
+
+  const cachedProfile = await redisClient.get(cacheKey);
+  if (cachedProfile) {
+    return JSON.parse(cachedProfile);
+  }
 
   const defaultUserPlan = {
     purchasedCredits: 0,
@@ -83,60 +89,84 @@ export const getUserProfile = async ({ userId }) => {
     },
   };
 
-  const userPlan = {
-    ...defaultUserPlan,
-    ...(await UserPlan.findOne({ userId })
-      .select(
-        "purchasedCredits remainingCredits status expiresAt createdAt planId",
-      )
-      .populate("planId", "code")
-      .lean()),
-  };
-
-  const userUsage = (await UserUsage.findOne({ userId })
-    .select("imagesGenerated videosGenerated creditsConsumed")
-    .lean()) ?? {
+  const defaultUsage = {
     imagesGenerated: 0,
     videosGenerated: 0,
     creditsConsumed: 0,
   };
 
-  return {
-    user: user,
-    plan: userPlan,
-    usage: userUsage,
+  const [user, plan, usage] = await Promise.all([
+    User.findById(userId)
+      .select("_id name email mobile credits profile_url")
+      .lean(),
+
+    UserPlan.findOne({ userId })
+      .select(
+        "purchasedCredits remainingCredits status expiresAt createdAt planId",
+      )
+      .populate("planId", "code")
+      .lean(),
+
+    UserUsage.findOne({ userId })
+      .select("imagesGenerated videosGenerated creditsConsumed")
+      .lean(),
+  ]);
+
+  const profile = {
+    user,
+    plan: {
+      ...defaultUserPlan,
+      ...plan,
+    },
+    usage: usage ?? defaultUsage,
   };
+
+  // Store in Redis
+  await redisClient.setEx(cacheKey, PROFILE_CACHE_TTL, JSON.stringify(profile));
+
+  return profile;
 };
 
-export const updateProfilePhoto = async ({ userId, files }) => {
-  const user = await User.findById(userId);
-  const oldAvatar = user.profileImage;
+export const updateProfilePhoto = async (req) => {
+  const { userId } = req.body;
 
-  let avatarLocalPath;
-  if (files && Array.isArray(files.avatar) && files.avatar.length > 0) {
-    avatarLocalPath = files.avatar[0].path;
-  }
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
 
   if (!avatarLocalPath) {
     throw new Error("Profile photo file is required");
   }
 
-  const avatar = await uploadOnCloudinary(avatarLocalPath, "PROFILE_PHOTO");
-  if (!avatar) {
-    throw new Error("Profile photo file is required");
+  const uploadedAvatar = await uploadOnCloudinary(
+    avatarLocalPath,
+    "PROFILE_PHOTO",
+  );
+
+  if (!uploadedAvatar?.url) {
+    throw new Error("Failed to upload profile photo");
   }
 
-  user.avatar = avatar.url;
-  await user.save();
+  // Get old avatar and update in a single query
+  const oldUser = await User.findOneAndUpdate(
+    { _id: userId },
+    { $set: { avatar: uploadedAvatar.url } },
+    {
+      projection: { avatar: 1 },
+      returnDocument: "before", // Returns document before update
+    },
+  ).lean();
+
+  if (!oldUser) {
+    throw new Error("User not found");
+  }
 
   await UserLog.create({
     userId,
     action: "AVATAR_UPDATED",
     changes: [
       {
-        field: "profileImage",
-        oldValue: oldAvatar,
-        newValue: profileImage,
+        field: "avatar",
+        oldValue: oldUser.avatar,
+        newValue: uploadedAvatar.url,
       },
     ],
     ipAddress: req.ip,
@@ -144,5 +174,36 @@ export const updateProfilePhoto = async ({ userId, files }) => {
     performedBy: userId,
   });
 
-  return user;
+  return uploadedAvatar.url;
+};
+
+export const removeProfilePhoto = async (req) => {
+  const { userId } = req.body;
+  const user = await User.findById(userId)
+    .select("avatar")
+    .lean();
+  const oldAvatar = user.avatar;
+
+  const updatedUser = await User.findByIdAndUpdate(
+    { _id: userId },
+    { $set: { avatar: "" } },
+    { returnDocument: "after" },
+  ).select("_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified").lean();
+
+  await UserLog.create({
+    userId,
+    action: "AVATAR_REMOVED",
+    changes: [
+      {
+        field: "avatar",
+        oldValue: oldAvatar,
+        newValue: "",
+      },
+    ],
+    ipAddress: req.ip,
+    userAgent: req.get("User-Agent"),
+    performedBy: userId,
+  });
+
+  return updatedUser;
 };

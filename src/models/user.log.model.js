@@ -18,6 +18,7 @@ const userLogSchema = new mongoose.Schema(
         'MOBILE_UPDATED',
         'PASSWORD_CHANGED',
         'AVATAR_UPDATED',
+        'AVATAR_REMOVED',
         'PLAN_CHANGED',
         'CREDITS_ADDED',
         'CREDITS_DEDUCTED',

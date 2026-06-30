@@ -1,11 +1,12 @@
-import { loginUser } from "../services/auth.service.js";
+import { loginUser, updateUserPassword, verifyEmailOtp } from "../services/auth.service.js";
 import User from "../models/user.model.js";
+import { sendOtpEmail } from "../services/email.service.js";
 
 export const login = async (req, res) => {
   try {
     const result = await loginUser(req.body);
 
-    const { user, accessToken, refreshToken, userPlan } = result;
+    const { user, accessToken, refreshToken, plan, usage } = result;
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -23,8 +24,9 @@ export const login = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Login successful",
-      user: user,
-      userPlan: userPlan
+      user,
+      plan,
+      usage,
     });
   } catch (err) {
     res.status(400).json({
@@ -54,4 +56,25 @@ export const logout = async (req, res) => {
       message: err.message,
     });
   }
+};
+
+export const updatePassword = async (req, res) => {
+  try {
+    await updateUserPassword(req);
+    res.status(201).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+export const sendOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  await sendOtpEmail(email, otp);
+  res.json({
+    success: true,
+    message: "OTP sent successfully.",
+  });
 };

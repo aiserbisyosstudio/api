@@ -22,10 +22,8 @@ const connectDB = async () => {
 
     isConnected = conn.connections[0].readyState === 1;
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-
     mongoose.connection.on('connected', () => {
-      console.log('MongoDB connected');
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
     });
 
     mongoose.connection.on('error', (err) => {

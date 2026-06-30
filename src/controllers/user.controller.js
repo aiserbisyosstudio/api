@@ -4,6 +4,7 @@ import {
   updateUserPlan,
   getUserProfile,
   updateProfilePhoto,
+  removeProfilePhoto,
 } from '../services/user.service.js';
 
 export const register = async (req, res) => {
@@ -44,9 +45,18 @@ export const getProfile = async (req, res) => {
 
 export const updatePhoto = async (req, res) => {
   try {
-    const user = await getUserProfile(req.body, req.files);
-    res.status(201).json({ success: true, message: "Profile photo updated successfully" });
+    const avatar = await updateProfilePhoto(req);
+    res.status(201).json({ success: true, message: "Profile photo updated successfully", avatar });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message, user });
+    res.status(400).json({ success: false, message: err.message });
+  }
+}
+
+export const removePhoto = async (req, res) => {
+  try {
+    const user = await removeProfilePhoto(req);
+    res.status(201).json({ success: true, message: "Profile photo removed successfully", user });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
   }
 }
