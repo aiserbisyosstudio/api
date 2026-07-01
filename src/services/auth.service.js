@@ -120,11 +120,9 @@ export const verifyEmailOtp = async ({ userId }) => {
     isEmailVerified: true,
   });
 
-  const user = await User.findById(userId)
-    .select(
-      "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
-    )
-    .lean();
+  const user = await User.findById(userId).select(
+    "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
+  );
 
   return user;
 };

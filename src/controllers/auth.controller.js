@@ -78,3 +78,12 @@ export const sendOtp = async (req, res) => {
     message: "OTP sent successfully.",
   });
 };
+
+export const verifyEmailOTP = async (req, res) => {
+  try {
+    const user = await verifyEmailOtp(req.body);
+    res.status(201).json({ success: true, message: "Email otp verified successfully", user });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+}

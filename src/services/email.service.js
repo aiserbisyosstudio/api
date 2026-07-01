@@ -1,5 +1,5 @@
 import resend from "../config/resend.js";
-import env from '../config/environment.js';
+import env from "../config/environment.js";
 
 export const sendOtpEmail = async (email, otp) => {
   try {
@@ -9,7 +9,7 @@ export const sendOtpEmail = async (email, otp) => {
       subject: "Your Verification OTP",
       html: `
       <div style="font-family:Arial;padding:30px">
-          <h2>AISerbisyos Studios</h2>
+          <h2>AISerbisyosStudios</h2>
 
           <p>Your verification code is</p>
 
