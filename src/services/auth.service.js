@@ -32,7 +32,7 @@ export const loginUser = async ({ emailMobile, password }) => {
 
   const loggedInUser = await User.findById(user._id)
     .select(
-      "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
+      "_id name email mobile role isActive credits avatar isEmailVerified isMobileVerified",
     )
     .lean();
 
@@ -113,16 +113,4 @@ export const updateUserPassword = async (req) => {
     userAgent: req.get("User-Agent"),
     performedBy: userId,
   });
-};
-
-export const verifyEmailOtp = async ({ userId }) => {
-  await User.findByIdAndUpdate(userId, {
-    isEmailVerified: true,
-  });
-
-  const user = await User.findById(userId).select(
-    "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
-  );
-
-  return user;
 };

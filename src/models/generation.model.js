@@ -1,16 +1,22 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const generationSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
 
     type: {
       type: String,
-      enum: ['image', 'video'],
+      enum: ["image", "video", "prompt"],
+      required: true,
+    },
+
+    operation: {
+      type: String,
+      enum: ["create", "edit", "collage", "analyze"],
       required: true,
     },
 
@@ -19,9 +25,9 @@ const generationSchema = new mongoose.Schema(
       required: true,
     },
 
-    resultUrl: {
+    result: {
       type: String,
-      required: true,
+      default: "",
     },
 
     creditsUsed: {
@@ -36,8 +42,8 @@ const generationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['pending', 'processing', 'completed', 'failed'],
-      default: 'pending',
+      enum: ["pending", "processing", "completed", "failed"],
+      default: "pending",
     },
   },
   {
@@ -46,4 +52,35 @@ const generationSchema = new mongoose.Schema(
   },
 );
 
-export default mongoose.model('Generation', generationSchema);
+generationSchema.statics.createGeneration = async function (data) {
+  return await this.create(data);
+};
+
+generationSchema.statics.updateGeneration = async function (
+  generationId,
+  updateData,
+) {
+  return await this.findByIdAndUpdate(
+    generationId,
+    {
+      $set: updateData,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+};
+
+generationSchema.statics.updateStatus = async function (generationId, status) {
+  return await this.findByIdAndUpdate(
+    generationId,
+    { status },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+};
+
+export default mongoose.model("Generation", generationSchema);

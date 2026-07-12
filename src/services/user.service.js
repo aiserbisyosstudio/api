@@ -60,12 +60,25 @@ export const updateUserPlan = async ({ userId, code }) => {
     purchasedCredits: plan.credits,
     remainingCredits: plan.credits,
   });
+
+  const user = await User.findById(userId)
+    .select(
+      "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
+    )
+    .lean();
+  user.availableCredits = userPlan?.remainingCredits ?? 0;
+  user.memberShipStatus = plan?.code ?? "new";
+
   if (!userPlan) {
     throw new Error("Failed to activate plan");
   }
+
   return {
-    ...userPlan.toObject(),
-    planName: plan.code,
+    plan: {
+      ...userPlan.toObject(),
+      planName: plan.code,
+    },
+    user,
   };
 };
 
@@ -89,7 +102,7 @@ export const getUserProfile = async ({ userId }) => {
 
   const [user, plan, usage] = await Promise.all([
     User.findById(userId)
-      .select("_id name email mobile credits profile_url")
+      .select("_id name email mobile role isActive credits avatar isEmailVerified isMobileVerified")
       .lean(),
 
     UserPlan.findOne({ userId })
@@ -103,6 +116,9 @@ export const getUserProfile = async ({ userId }) => {
       .select("imagesGenerated videosGenerated creditsConsumed")
       .lean(),
   ]);
+
+  user.availableCredits = plan?.remainingCredits ?? 0;
+  user.memberShipStatus = plan?.planId?.code ?? "new";
 
   const profile = {
     user,
@@ -167,16 +183,18 @@ export const updateProfilePhoto = async (req) => {
 
 export const removeProfilePhoto = async (req) => {
   const { userId } = req.body;
-  const user = await User.findById(userId)
-    .select("avatar")
-    .lean();
+  const user = await User.findById(userId).select("avatar").lean();
   const oldAvatar = user.avatar;
 
   const updatedUser = await User.findByIdAndUpdate(
     { _id: userId },
     { $set: { avatar: "" } },
     { returnDocument: "after" },
-  ).select("_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified").lean();
+  )
+    .select(
+      "_id name email mobile role is_active credits avatar isEmailVerified isMobileVerified",
+    )
+    .lean();
 
   await UserLog.create({
     userId,

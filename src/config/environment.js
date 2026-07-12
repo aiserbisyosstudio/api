@@ -27,7 +27,12 @@ const env = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   REDIS_URL: process.env.REDIS_URL,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
-  EMAIL_FROM: process.env.EMAIL_FROM
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  GPT_CREATE_MODEL: process.env.GPT_CREATE_MODEL,
+  SMS_OTP_TEMPLATE: process.env.SMS_OTP_TEMPLATE,
+  SMS_OTP_API_KEY: process.env.SMS_OTP_API_KEY,
+  OTP_EXPIRE_MINUTES: process.env.OTP_EXPIRE_MINUTES,
+  IMAGE_MINI_MODEL: process.env.IMAGE_MINI_MODEL
 };
 
 const requiredVars = [

@@ -25,6 +25,11 @@ const userUsageSchema = new mongoose.Schema(
       default: 0,
     },
 
+    promptsGenerated: {
+      type: Number,
+      default: 0,
+    },
+
     creditsConsumed: {
       type: Number,
       default: 0,

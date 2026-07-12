@@ -1,12 +1,22 @@
-import { loginUser, updateUserPassword, verifyEmailOtp } from "../services/auth.service.js";
+import { loginUser, updateUserPassword } from "../services/auth.service.js";
 import User from "../models/user.model.js";
-import { sendOtpEmail } from "../services/email.service.js";
 
 export const login = async (req, res) => {
   try {
     const result = await loginUser(req.body);
 
     const { user, accessToken, refreshToken, plan, usage } = result;
+
+    req.session.user = user;
+    req.session.accessToken = accessToken;
+    req.session.refreshToken = refreshToken;
+
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -29,6 +39,7 @@ export const login = async (req, res) => {
       usage,
     });
   } catch (err) {
+    console.log(err);
     res.status(400).json({
       success: false,
       message: err.message,
@@ -69,21 +80,3 @@ export const updatePassword = async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 };
-
-export const sendOtp = async (req, res) => {
-  const { email, otp } = req.body;
-  await sendOtpEmail(email, otp);
-  res.json({
-    success: true,
-    message: "OTP sent successfully.",
-  });
-};
-
-export const verifyEmailOTP = async (req, res) => {
-  try {
-    const user = await verifyEmailOtp(req.body);
-    res.status(201).json({ success: true, message: "Email otp verified successfully", user });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
-  }
-}

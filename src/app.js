@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import session from "express-session";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(
       "https://www.aiserbisyosstudio.com",
       "https://aiserbisyosstudio.com",
       "http://localhost:5173",
+      "http://192.168.1.7:5173"
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
@@ -21,16 +23,34 @@ app.use(
 );
 
 app.use(express.json());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  }),
+);
 
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
 import contactRouter from "./routes/contact.route.js";
-import planRouter from "./routes/plan.route.js"
+import planRouter from "./routes/plan.route.js";
+import orderRouter from "./routes/order.route.js";
+import otpRouter from "./routes/otp.route.js";
+import aiRouter from "./routes/ai.route.js";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/contact", contactRouter);
 app.use("/api/v1/plan", planRouter);
+app.use("/api/v1/order", orderRouter);
+app.use("/api/v1/otp", otpRouter);
+app.use("/api/v1/ai", aiRouter);
 
 app.get("/", (req, res) => {
   res.json({

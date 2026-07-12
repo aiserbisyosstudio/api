@@ -27,8 +27,8 @@ export const updateUserLanguage = async (req, res) => {
 
 export const updatePlan = async (req, res) => {
   try {
-    const userPlan = await updateUserPlan(req.body);
-    res.status(201).json({ userPlan, success: true, message: 'Plan activate successfully' });
+    const plan = await updateUserPlan(req.body);
+    res.status(201).json({ user: plan.user, plan: plan.plan, success: true, message: 'Plan activate successfully' });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -39,6 +39,7 @@ export const getProfile = async (req, res) => {
     const profile = await getUserProfile(req.body);
     res.status(201).json({ profile, success: true });
   } catch (err) {
+    console.log(err);
     res.status(400).json({ success: false, message: err.message });
   }
 }
