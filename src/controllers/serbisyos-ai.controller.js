@@ -19,6 +19,8 @@ export const generatePrompt = async (req, res) => {
 };
 
 export const generateImage = async (req, res) => {
+  console.log("LOGIN SESSION ID in create image:", req.sessionID);
+  console.log("LOGIN SESSION in create image:", req.session);
   let gen;
   try {
     const { base64Image, mimeType, generation } = await generateAiImage(req.body);

@@ -10,7 +10,6 @@ export const login = async (req, res) => {
     req.session.user = user;
     req.session.accessToken = accessToken;
     req.session.refreshToken = refreshToken;
-    await req.session.save();
 
     await new Promise((resolve, reject) => {
       req.session.save((err) => {
@@ -18,6 +17,9 @@ export const login = async (req, res) => {
         resolve();
       });
     });
+
+    console.log("LOGIN SESSION ID in login:", req.sessionID);
+    console.log("LOGIN SESSION in login:", req.session);
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
