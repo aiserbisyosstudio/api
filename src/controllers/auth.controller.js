@@ -10,6 +10,7 @@ export const login = async (req, res) => {
     req.session.user = user;
     req.session.accessToken = accessToken;
     req.session.refreshToken = refreshToken;
+    await req.session.save();
 
     await new Promise((resolve, reject) => {
       req.session.save((err) => {

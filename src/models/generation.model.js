@@ -45,6 +45,11 @@ const generationSchema = new mongoose.Schema(
       enum: ["pending", "processing", "completed", "failed"],
       default: "pending",
     },
+    usage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserUsage",
+      required: true,
+    }
   },
   {
     timestamps: true,
@@ -66,7 +71,7 @@ generationSchema.statics.updateGeneration = async function (
       $set: updateData,
     },
     {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     },
   );
@@ -77,7 +82,7 @@ generationSchema.statics.updateStatus = async function (generationId, status) {
     generationId,
     { status },
     {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     },
   );

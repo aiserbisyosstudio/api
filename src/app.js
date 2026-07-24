@@ -15,7 +15,8 @@ app.use(
       "https://www.aiserbisyosstudio.com",
       "https://aiserbisyosstudio.com",
       "http://localhost:5173",
-      "http://192.168.1.7:5173"
+      "http://192.168.1.6:5173",
+      "http://172.20.10.6:5173"
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
@@ -42,7 +43,7 @@ import contactRouter from "./routes/contact.route.js";
 import planRouter from "./routes/plan.route.js";
 import orderRouter from "./routes/order.route.js";
 import otpRouter from "./routes/otp.route.js";
-import aiRouter from "./routes/ai.route.js";
+import serbisyosRouter from "./routes/serbisyos-ai.route.js";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/auth", authRouter);
@@ -50,7 +51,7 @@ app.use("/api/v1/contact", contactRouter);
 app.use("/api/v1/plan", planRouter);
 app.use("/api/v1/order", orderRouter);
 app.use("/api/v1/otp", otpRouter);
-app.use("/api/v1/ai", aiRouter);
+app.use("/api/v1/serbisyos", serbisyosRouter);
 
 app.get("/", (req, res) => {
   res.json({

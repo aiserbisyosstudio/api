@@ -1,10 +1,13 @@
-import { generatePrompt, createImage } from "../services/ai.service.js";
+import {
+  generateAiPrompt,
+  generateAiImage,
+} from "../services/serbisyos-ai.service.js";
 import Generation from "../models/generation.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.util.js";
 
-export const generateAiPrompt = async (req, res) => {
+export const generatePrompt = async (req, res) => {
   try {
-    const prompt = await generatePrompt(req.body);
+    const prompt = await generateAiPrompt(req.body);
     res.status(201).json({
       success: true,
       message: "Prompt generated successfully",
@@ -15,17 +18,17 @@ export const generateAiPrompt = async (req, res) => {
   }
 };
 
-export const createAiImage = async (req, res) => {
-  let generation;
+export const generateImage = async (req, res) => {
+  let gen;
   try {
-    const response = await createImage(req.body);
-    generation = response.generation;
+    const { base64Image, mimeType, generation } = await generateAiImage(req.body);
+    gen = generation;
 
-    const imageFile = `data:image/png;base64,${response.base64_json}`;
+    const imageFile = `data:${mimeType};base64,${base64Image}`
     const aiImage = await uploadOnCloudinary(imageFile, "IMAGES");
     const image_url = aiImage.url;
 
-    await Generation.updateGeneration(generation._id, {
+    await Generation.updateGeneration(gen._id, {
       result: image_url,
       status: "completed",
     });
@@ -37,8 +40,8 @@ export const createAiImage = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    if (generation) {
-      await Generation.updateStatus(generation._id, "failed");
+    if (gen) {
+      await Generation.updateStatus(gen._id, "failed");
     }
     res.status(400).json({ success: false, message: err.message });
   }
