@@ -124,7 +124,7 @@ export const generateAiImage = async ({ prompt, userId }) => {
 
     generation = await createGeneration({
       userId,
-      type: "prompt",
+      type: "image",
       operation: "create",
       prompt: clearedPrompt,
       creditsUsed: PROMPT_CREDIT_COST,
@@ -135,7 +135,6 @@ export const generateAiImage = async ({ prompt, userId }) => {
       },
     });
 
-    console.log(response);
     const imagePart = response.candidates[0].content.parts.find(
       (part) => part.inlineData,
     );

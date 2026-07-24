@@ -18,9 +18,6 @@ export const login = async (req, res) => {
       });
     });
 
-    console.log("LOGIN SESSION ID in login:", req.sessionID);
-    console.log("LOGIN SESSION in login:", req.session);
-
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
