@@ -57,6 +57,7 @@ export const editImage = async (req, res) => {
   try {
     const { prompt, userId } = req.body;
     const image = req.files?.image?.[0];
+    console.log("File path: ", image.path);
     const imageBuffer = await fs.readFile(image.path);
     const { base64Image, mimeType, generation } = await editAiImage({
       imageBuffer: imageBuffer.toString("base64"),

@@ -14,8 +14,6 @@ const connectDB = async () => {
       dbName: env.DB_NAME,
       maxPoolSize: 100,
       minPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
       retryWrites: true,
       family: 4,
     });

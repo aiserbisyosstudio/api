@@ -9,6 +9,7 @@ import {
 } from "../utils/utilities.util.js";
 import Generation from "../models/generation.model.js";
 import { Modality } from "@google/genai";
+import sharp from "sharp";
 
 export const generateAiPrompt = async ({ prompt, userId }) => {
   let generation;
@@ -167,10 +168,19 @@ export const editAiImage = async ({ imageBuffer, mime, prompt, userId }) => {
       throw new Error("Insufficient credits");
     }
 
+    const optimizedBuffer = await sharp(imageBuffer)
+      .resize({
+        width: 1024,
+        height: 1024,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: 80 })
+      .toBuffer();
     const reqImagePart = {
       inlineData: {
         mimeType: mime,
-        data: imageBuffer.toString("base64"),
+        data: optimizedBuffer.toString("base64"),
       },
     };
 
