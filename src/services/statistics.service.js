@@ -84,6 +84,7 @@ export const getUserTransactionHisotry = async ({ userId, days }) => {
     credits: `-${item.creditsUsed} Credits`,
     status: item.status.charAt(0).toUpperCase() + item.status.slice(1),
     date: formatDateTime(item.createdAt),
+    result: item.result
   }));
 
   return history;
