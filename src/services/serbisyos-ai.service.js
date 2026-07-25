@@ -152,3 +152,172 @@ export const generateAiImage = async ({ prompt, userId }) => {
     throw new Error("Failed to generate image");
   }
 };
+
+export const editAiImage = async ({ imageBuffer, mime, prompt, userId }) => {
+  let generation;
+  try {
+    const result = await validateUserInput(userId, prompt);
+    if (result) {
+      throw new Error(result);
+    }
+
+    const PROMPT_CREDIT_COST = 100;
+    const userPlan = await crateUsagePlan(PROMPT_CREDIT_COST, userId);
+    if (!userPlan) {
+      throw new Error("Insufficient credits");
+    }
+
+    const reqImagePart = {
+      inlineData: {
+        mimeType: mime,
+        data: imageBuffer.toString("base64"),
+      },
+    };
+
+    const clearedPrompt = cleanPrompt(prompt);
+    const startTime = Date.now();
+    const response = await geminiAi.models.generateContent({
+      model: env.GEMINI_IMAGE_MODEL_FLASH,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            reqImagePart,
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+      config: {
+        responseModalities: [Modality.IMAGE],
+      },
+    });
+    const endTime = Date.now();
+
+    const generationTimeSeconds = Number(
+      ((endTime - startTime) / 1000).toFixed(2),
+    );
+
+    generation = await createGeneration({
+      userId,
+      type: "image",
+      operation: "edit",
+      prompt: clearedPrompt,
+      creditsUsed: PROMPT_CREDIT_COST,
+      model: env.GEMINI_IMAGE_MODEL_FLASH,
+      duration: generationTimeSeconds,
+      usageData: {
+        images: 1,
+      },
+    });
+
+    const imagePart = response.candidates[0].content.parts.find(
+      (part) => part.inlineData,
+    );
+    if (!imagePart) {
+      throw new Error("No image returned from Gemini");
+    }
+    const { data: base64Image, mimeType } = imagePart.inlineData;
+    return { base64Image, mimeType, generation };
+  } catch (error) {
+    if (generation) {
+      await Generation.updateStatus(generation._id, "failed");
+    }
+    console.error(error);
+
+    throw new Error("Failed to edit image");
+  }
+};
+
+export const createAiImageCollage = async ({ files, prompt, userId }) => {
+  let generation;
+  try {
+    if (!files || files.length < 2) {
+      throw new Error("Minimum 2 images are required.");
+    }
+
+    const result = await validateUserInput(userId, prompt);
+    if (result) {
+      throw new Error(result);
+    }
+
+    const PROMPT_CREDIT_COST = 100;
+    const userPlan = await crateUsagePlan(PROMPT_CREDIT_COST, userId);
+    if (!userPlan) {
+      throw new Error("Insufficient credits");
+    }
+
+    const uploadedImages = await Promise.all(
+      files.map((file) =>
+        geminiAi.files.upload({
+          file: file.path,
+        }),
+      ),
+    );
+
+    const imageParts = uploadedImages.map((image) => ({
+      fileData: {
+        fileUri: image.uri,
+        mimeType: image.mimeType,
+      },
+    }));
+
+    const clearedPrompt = cleanPrompt(prompt);
+    const startTime = Date.now();
+    const response = await geminiAi.models.generateContent({
+      model: env.GEMINI_IMAGE_MODEL_FLASH,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            ...imageParts,
+            {
+              text:
+                prompt ||
+                `Create a beautiful square collage using every uploaded image.
+                 Do not remove any image.
+                 Keep faces visible.
+                 Use a clean white background.
+                 Add equal spacing between images.`,
+            },
+          ],
+        },
+      ],
+    });
+    const endTime = Date.now();
+
+    const generationTimeSeconds = Number(
+      ((endTime - startTime) / 1000).toFixed(2),
+    );
+
+    generation = await createGeneration({
+      userId,
+      type: "image",
+      operation: "collage",
+      prompt: clearedPrompt,
+      creditsUsed: PROMPT_CREDIT_COST,
+      model: env.GEMINI_IMAGE_MODEL_FLASH,
+      duration: generationTimeSeconds,
+      usageData: {
+        images: 1,
+      },
+    });
+
+    const imagePart = response.candidates[0].content.parts.find(
+      (part) => part.inlineData,
+    );
+    if (!imagePart) {
+      throw new Error("No image returned from Gemini");
+    }
+    const { data: base64Image, mimeType } = imagePart.inlineData;
+    return { base64Image, mimeType, generation };
+  } catch (error) {
+    if (generation) {
+      await Generation.updateStatus(generation._id, "failed");
+    }
+    console.error(error);
+
+    throw new Error("Failed to create image collage");
+  }
+};
