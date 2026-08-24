@@ -150,7 +150,7 @@ export const generateAiImage = async ({ prompt, userId }) => {
     }
     console.error(error);
 
-    throw new Error("Failed to generate image");
+    throw new Error(error.message);
   }
 };
 
