@@ -24,12 +24,12 @@ export const generatePrompt = async (req, res) => {
 export const generateImage = async (req, res) => {
   let gen;
   try {
-    const { base64Image, mimeType, generation } = await generateAiImage(
+    const { base64Image, generation } = await generateAiImage(
       req.body,
     );
 
     gen = generation;
-    const imageFile = `data:${mimeType};base64,${base64Image}`;
+    const imageFile = `data:image/png;base64,${base64Image}`;
     const aiImage = await uploadOnCloudinary(imageFile, "IMAGES");
     const image_url = aiImage.url;
 

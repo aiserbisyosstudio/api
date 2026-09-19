@@ -1,5 +1,5 @@
 import geminiAi from "../config/gemini.js";
-import fs from "fs";
+import { openai } from "../config/openai.js";
 import env from "../config/environment.js";
 import { cleanPrompt } from "../utils/prompt-utils.js";
 import {
@@ -26,7 +26,6 @@ export const generateAiPrompt = async ({ prompt, userId }) => {
     }
 
     const clearedPrompt = cleanPrompt(prompt);
-
     const input = `
         You are an expert AI prompt engineer specializing in image generation.
 
@@ -49,7 +48,7 @@ export const generateAiPrompt = async ({ prompt, userId }) => {
         Return only the improved prompt.
 
         User Prompt:
-        """${prompt}"""
+        """${clearedPrompt}"""
         `;
 
     const startTime = Date.now();
@@ -110,13 +109,22 @@ export const generateAiImage = async ({ prompt, userId }) => {
     const clearedPrompt = cleanPrompt(prompt);
 
     const startTime = Date.now();
-    const response = await geminiAi.models.generateContent({
-      model: env.GEMINI_IMAGE_MODEL_FLASH,
-      contents: clearedPrompt,
-      config: {
-        responseModalities: [Modality.IMAGE],
-      },
+    const response = await openai.images.generate({
+      model: process.env.IMAGE_MINI_MODEL,
+      prompt: clearedPrompt.replace(/\n/g, " ").replace(/\s+/g, " ").trim(),
+      size: '1024x1024',
+      quality: "medium",
     });
+
+    if (
+      !response ||
+      !response.data ||
+      !response.data[0] ||
+      !response.data[0].b64_json
+    ) {
+      throw new Error("Failed to generate image");
+    }
+
     const endTime = Date.now();
 
     const generationTimeSeconds = Number(
@@ -129,21 +137,14 @@ export const generateAiImage = async ({ prompt, userId }) => {
       operation: "create",
       prompt: clearedPrompt,
       creditsUsed: PROMPT_CREDIT_COST,
-      model: env.GEMINI_IMAGE_MODEL_FLASH,
+      model: env.IMAGE_MINI_MODEL,
       duration: generationTimeSeconds,
       usageData: {
         images: 1,
       },
     });
 
-    const imagePart = response.candidates[0].content.parts.find(
-      (part) => part.inlineData,
-    );
-    if (!imagePart) {
-      throw new Error("No image returned from Gemini");
-    }
-    const { data: base64Image, mimeType } = imagePart.inlineData;
-    return { base64Image, mimeType, generation };
+    return { base64Image: response.data[0].b64_json, generation };
   } catch (error) {
     if (generation) {
       await Generation.updateStatus(generation._id, "failed");

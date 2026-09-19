@@ -35,7 +35,7 @@ export const sendEmailOtp = async ({ email }) => {
 
     html: `
       <div style="font-family:Arial;padding:30px">
-          <h2>AISerbisyosStudios</h2>
+          <h2>AISerbisyosStudio</h2>
 
           <p>Your verification code is</p>
 
